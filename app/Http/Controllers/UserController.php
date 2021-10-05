@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 
 use App\User;
-
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
@@ -32,7 +34,7 @@ class UserController extends Controller
         
         // $user->tokens()->delete();
     }
-    public function currenUser(Auth $auth){
+    public function currentUser(Auth $auth){
         return $auth::user();
     }
 
@@ -50,7 +52,6 @@ class UserController extends Controller
             'email'=>$fields['email'],
             'phoneNumber'=>$fields['phoneNumber'],
             'password'=> bcrypt($fields['password'])
-
         ]);
         $token=$user->createToken('token')->plainTextToken;
 
@@ -63,27 +64,36 @@ class UserController extends Controller
     }
 
     public function update(Request $request,$id){
+        $user=User::find($id);
+        $response=Gate::inspect('update',$user);
+        if($response->allowed()){
         $fields=$request->validate([
             'name'=> 'string',
-            'userName'=>'string|unique:users,userName',
-            'password'=>'string|confirmed',
+            'password'=>'string|confirmed|min:6',
             'email'=>'string|unique:users,email',
             'phoneNumber'=>'string|unique:users,phoneNumber',
-            'image' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'profilePhoto' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'birthDate'=>'date',
         ]);
-
-        $imageName = time().'.'.$request->image->extension();
-        $request->image->move(public_path('images'), $imageName);
-        
-        $user = User::find($id);
-
-        if ($key= array_search('password',$fields)){
-            $user->password=bcrypt($fields['password']);
-            unset($fields[$key]);
+        if ($request->hasFile('profilePhoto')) {
+            $image= $request->file('profilePhoto');
+            $extension = $image->getClientOriginalExtension();
+            $imageName = time().'.'.$extension;
+            $image->move(public_path('uploads/profilePhoto/'), $imageName);
+            $user->profilePhoto='uploads/profilePhoto/'.$imageName;
+            unset($fields['profilePhoto']);
+        }
+        if ($request->has('password')){
+            $user->password=Hash::make($request->password);
+            unset($fields['password']);
         }
         $user->update($fields);
         $user->save();
         return $fields;
+    } 
+     else {
+        return $response->message();
     }
+    }  
 }
 

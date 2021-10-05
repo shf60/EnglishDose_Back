@@ -26,13 +26,14 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::put('/updateAnswer/{id}','Admin\AnswerController@update');    
     Route::delete('/deleteAnswer/{id}','Admin\AnswerController@destroy');
     Route::delete('/deleteQuestion/{id}','Admin\QuizController@destroy');
-    Route::get('/me', 'UserController@currenUser');
+    Route::get('/me', 'UserController@currentUser');
+    Route::post('/userProfile/{id}','UserController@update')->middleware('throttle:20,1');
 });
 
 
 
 Route::post('/login','UserController@login')->middleware('throttle:30,1');
 Route::post('/register','UserController@register')->middleware('throttle:20,1');
-Route::put('/updateUser/{id}','UserController@update')->middleware('throttle:20,1');
+
 
 
