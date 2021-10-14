@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 
 use App\User;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
@@ -42,7 +43,7 @@ class UserController extends Controller
         $fields=$request->validate([
             'name'=> 'required|string',
             'userName'=>'required|string|unique:users,userName',
-            'password'=>'required|string|confirmed',
+            'password'=>'required|string|confirmed|min:6',
             'email'=>'required|string|unique:users,email',
             'phoneNumber'=>'required|string|unique:users,phoneNumber',
         ]);
@@ -59,7 +60,7 @@ class UserController extends Controller
             'user'=>$user,
             'token'=>$token
         ];
-
+        event(new Registered($user));
         return response($response,201);
     }
 
