@@ -20,6 +20,7 @@ use Illuminate\Foundation\Auth\EmailVerificationRequest;
 |
 */
 Route::middleware(['auth:sanctum'])->group(function () {
+    //////////////////Placement////////////
     Route::get('/index','Admin\QuizController@index');
     Route::post('/create','Admin\QuizController@store');
     Route::post('/createAnswer','Admin\AnswerController@store');
@@ -29,19 +30,21 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::delete('/deleteQuestion/{id}','Admin\QuizController@destroy');
     Route::get('/me', 'UserController@currentUser');
     Route::post('/userProfile/{id}','UserController@update')->middleware('throttle:20,1');
-
+    //////////////////Email Verification////////////
     Route::post('/email/verification-notification', function (Request $request) {
         $request->user()->sendEmailVerificationNotification();
         return 'Verification link sent!';
     });
-
     Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
         $request->fulfill();
         return 'verified!';
     })->middleware(['signed'])->name('verification.verify');    
+    //////////////////Courses////////////
+    Route::post('/course','CourseController@create')->middleware('throttle:20,1');
+    Route::put('/course/update/{id}','CourseController@update')->middleware('throttle:20,1');
+    Route::delete('/course/delete/{id}','CourseController@delete')->middleware('throttle:20,1');
 });
-
-
-
+///////////////////////////Public///////////////////
 Route::post('/login','UserController@login')->middleware('throttle:30,1');
 Route::post('/register','UserController@register')->middleware('throttle:20,1');
+Route::get('/course','CourseController@index')->middleware('throttle:20,1');
